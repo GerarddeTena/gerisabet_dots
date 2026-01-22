@@ -1,27 +1,49 @@
-local wezterm = require 'wezterm'
+local wezterm = require("wezterm")
 local config = {}
 
 -- Usar la versión más moderna de la configuración
 if wezterm.config_builder then
-  config = wezterm.config_builder()
+	config = wezterm.config_builder()
 end
 
 -- --- ESTÉTICA ---
-config.color_scheme = 'Tokyo Night' -- Un tema muy popular para devs
-config.font = wezterm.font('JetBrains Mono') -- Si no la tienes, Mint la instalará
-config.font_size = 11.0
-config.window_background_opacity = 0.90 -- Un toque de transparencia
+config.font_size = 12.0
+config.window_background_opacity = 1
 config.window_padding = { left = 10, right = 10, top = 10, bottom = 10 }
-config.font = wezterm.font('IosevkaTerm Nerd Font')
--- --- ATAJOS DE TECLADO (Keybindings) ---
--- Usaremos CTRL+SHIFT como tecla líder para no chocar con Neovim
-config.keys = {
-  -- Dividir pantalla horizontalmente (como en VS Code pero con teclado)
-  { key = 'h', mods = 'CTRL|SHIFT', action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' } },
-  -- Dividir pantalla verticalmente
-  { key = 'v', mods = 'CTRL|SHIFT', action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' } },
-  -- Cerrar panel
-  { key = 'w', mods = 'CTRL|SHIFT', action = wezterm.action.CloseCurrentPane { confirm = true } },
-}
+config.font = wezterm.font("IosevkaTerm Nerd Font")
+config.default_prog = { "/usr/bin/env", "fish", "-l" }
+config.colors = {
+	background = "#0D0C0C",
+	foreground = "#C5C9C5",
+	cursor_bg = "#C8C093",
+	cursor_fg = "#0D0C0C",
+	cursor_border = "#C8C093",
+	selection_bg = "#8BA4B0",
+	selection_fg = "#0D0C0C",
 
+	split = "#A6A69C",
+	scrollbar_thumb = "#434343",
+	compose_cursor = "#E6C384",
+
+	ansi = {
+		"#0D0C0C",
+		"#C4746E",
+		"#8A9A7B",
+		"#C4B28A",
+		"#8BA4B0",
+		"#A292A3",
+		"#8EA4A2",
+		"#C8C093",
+	},
+	brights = {
+		"#A6A69C",
+		"#E46876",
+		"#87A987",
+		"#E6C384",
+		"#7FB4CA",
+		"#938AA9",
+		"#7AA89F",
+		"#C5C9C5",
+	},
+}
 return config

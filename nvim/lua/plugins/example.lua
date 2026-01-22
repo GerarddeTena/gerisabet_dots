@@ -1,220 +1,112 @@
--- since this is just an example spec, don't actually load anything here and return an empty spec
--- stylua: ignore
-if true then return {} end
+local dotnet_root = vim.fn.expand("~/.dotnet")
+vim.env.DOTNET_ROOT = dotnet_root
+vim.env.PATH = vim.env.PATH .. ":" .. dotnet_root .. ":" .. dotnet_root .. "/tools"
 
--- every spec file under the "plugins" directory will be loaded automatically by lazy.nvim
---
--- In your plugin files, you can:
--- * add extra plugins
--- * disable/enabled LazyVim plugins
--- * override the configuration of LazyVim plugins
 return {
-  -- add gruvbox
-  { "ellisonleao/gruvbox.nvim" },
+  -- 1. TEMA
+  { "rebelot/kanagawa.nvim" },
+  { "LazyVim/LazyVim", opts = { colorscheme = "kanagawa-dragon" } },
 
-  -- Configure LazyVim to load gruvbox
+  -- 2. TREESITTER
   {
-    "LazyVim/LazyVim",
-    opts = {
-      colorscheme = "gruvbox",
-    },
-  },
-
-  -- change trouble config
-  {
-    "folke/trouble.nvim",
-    -- opts will be merged with the parent spec
-    opts = { use_diagnostic_signs = true },
-  },
-
-  -- disable trouble
-  { "folke/trouble.nvim", enabled = false },
-
-  -- override nvim-cmp and add cmp-emoji
-  {
-    "hrsh7th/nvim-cmp",
-    dependencies = { "hrsh7th/cmp-emoji" },
-    ---@param opts cmp.ConfigSchema
+    "nvim-treesitter/nvim-treesitter",
     opts = function(_, opts)
-      table.insert(opts.sources, { name = "emoji" })
+      vim.list_extend(opts.ensure_installed, { "csharp", "lua" })
     end,
   },
 
-  -- change some telescope options and a keymap to browse plugin files
+  -- 3. LUALINE (Versión segura)
   {
-    "nvim-telescope/telescope.nvim",
-    keys = {
-      -- add a keymap to browse plugin files
-      -- stylua: ignore
-      {
-        "<leader>fp",
-        function() require("telescope.builtin").find_files({ cwd = require("lazy.core.config").options.root }) end,
-        desc = "Find Plugin File",
-      },
-    },
-    -- change some options
-    opts = {
-      defaults = {
-        layout_strategy = "horizontal",
-        layout_config = { prompt_position = "top" },
-        sorting_strategy = "ascending",
-        winblend = 0,
-      },
-    },
+    "nvim-lualine/lualine.nvim",
+    opts = function(_, opts)
+      local ok, dotnet = pcall(require, "easy-dotnet")
+      if ok then
+        table.insert(opts.sections.lualine_x, {
+          function()
+            return "󰓚 .NET"
+          end,
+          cond = function()
+            local status, resolved = pcall(dotnet.is_resolved)
+            return status and resolved
+          end,
+          color = { fg = "#512bd4" },
+        })
+      end
+    end,
   },
 
-  -- add pyright to lspconfig
+  -- 4. EASY-DOTNET (Corregido y verificado)
   {
-    "neovim/nvim-lspconfig",
-    ---@class PluginLspOpts
-    opts = {
-      ---@type lspconfig.options
-      servers = {
-        -- pyright will be automatically installed with mason and loaded with lspconfig
-        pyright = {},
-      },
-    },
-  },
-
-  -- add tsserver and setup with typescript.nvim instead of lspconfig
-  {
-    "neovim/nvim-lspconfig",
+    "GustavEikaas/easy-dotnet.nvim",
     dependencies = {
-      "jose-elias-alvarez/typescript.nvim",
-      init = function()
-        require("lazyvim.util").lsp.on_attach(function(_, buffer)
-          -- stylua: ignore
-          vim.keymap.set( "n", "<leader>co", "TypescriptOrganizeImports", { buffer = buffer, desc = "Organize Imports" })
-          vim.keymap.set("n", "<leader>cR", "TypescriptRenameFile", { desc = "Rename File", buffer = buffer })
-        end)
-      end,
+      "nvim-lua/plenary.nvim",
+      "mfussenegger/nvim-dap",
+      "nvim-telescope/telescope.nvim",
     },
-    ---@class PluginLspOpts
-    opts = {
-      ---@type lspconfig.options
-      servers = {
-        copilot = { enabled = false }, -- tsserver will be automatically installed with mason and loaded with lspconfig
-        tsserver = {},
-      },
-      -- you can do any additional lsp server setup here
-      -- return true if you don't want this server to be setup with lspconfig
-      ---@type table<string, fun(server:string, opts:_.lspconfig.options):boolean?>
-      setup = {
-        -- example to setup with typescript.nvim
-        tsserver = function(_, opts)
-          require("typescript").setup({ server = opts })
-          return true
-        end,
-        -- Specify * to use this function as a fallback for any server
-        -- ["*"] = function(server, opts) end,
-      },
-    },
-  },
+    config = function()
+      local dotnet = require("easy-dotnet")
 
-  -- for typescript, LazyVim also includes extra specs to properly setup lspconfig,
-  -- treesitter, mason and typescript.nvim. So instead of the above, you can use:
-  { import = "lazyvim.plugins.extras.lang.typescript" },
-
-  -- add more treesitter parsers
-  {
-    "nvim-treesitter/nvim-treesitter",
-    opts = {
-      ensure_installed = {
-        "bash",
-        "html",
-        "javascript",
-        "json",
-        "lua",
-        "markdown",
-        "markdown_inline",
-        "python",
-        "query",
-        "regex",
-        "tsx",
-        "typescript",
-        "vim",
-        "yaml",
-      },
-    },
-  },
-
-  -- since `vim.tbl_deep_extend`, can only merge tables and not lists, the code above
-  -- would overwrite `ensure_installed` with the new value.
-  -- If you'd rather extend the default config, use the code below instead:
-  {
-    "nvim-treesitter/nvim-treesitter",
-    opts = function(_, opts)
-      -- add tsx and treesitter
-      vim.list_extend(opts.ensure_installed, {
-        "tsx",
-        "typescript",
-      })
-    end,
-  },
-
-  -- the opts function can also be used to change the default opts:
-  {
-    "nvim-lualine/lualine.nvim",
-    event = "VeryLazy",
-    opts = function(_, opts)
-      table.insert(opts.sections.lualine_x, {
-        function()
-          return "😄"
+      dotnet.setup({
+        terminal = function(path, action, args)
+          local command = string.format("dotnet %s %s %s", action, path, args or "")
+          vim.cmd("vsplit | term " .. command)
         end,
       })
+
+      -- MAPEOS SEGUROS (Evitan el error 'got nil')
+      -- Build
+      vim.keymap.set("n", "<leader>db", function()
+        dotnet.build()
+      end, { desc = "Build Project" })
+
+      -- Run
+      vim.keymap.set("n", "<leader>dr", function()
+        dotnet.run()
+      end, { desc = "Run Project" })
+
+      -- Test Runner (Corregido: cargando el módulo de UI)
+      vim.keymap.set("n", "<leader>dt", function()
+        local ok, runner = pcall(require, "easy-dotnet.test-runner")
+        if ok then
+          runner.refresh()
+        else
+          print("Test runner no disponible")
+        end
+      end, { desc = "Test Runner" })
     end,
   },
 
-  -- or you can return new options to override all the defaults
+  -- 5. MASON (Nombre de repo actualizado)
   {
-    "nvim-lualine/lualine.nvim",
-    event = "VeryLazy",
-    opts = function()
-      return {
-        --[[add your custom lualine config here]]
-      }
+    "mason-org/mason.nvim",
+    opts = { ensure_installed = { "stylua" } },
+  },
+
+  -- 6. DAP (Sin llamar a .setup)
+  {
+    "mfussenegger/nvim-dap",
+    config = function()
+      -- Aquí no ponemos NADA de setup, dejamos que easy-dotnet inyecte las configs
     end,
   },
 
-  -- use mini.starter instead of alpha
-  { import = "lazyvim.plugins.extras.ui.mini-starter" },
-
-  -- add jsonls and schemastore packages, and setup treesitter for json, json5 and jsonc
-  { import = "lazyvim.plugins.extras.lang.json" },
-
-  -- add any tools you want to have installed below
   {
-    "williamboman/mason.nvim",
-    opts = {
-      ensure_installed = {
-        "stylua",
-        "shellcheck",
-        "shfmt",
-        "flake8",
-      },
+    "kdheepak/lazygit.nvim",
+    lazy = false,
+    cmd = {
+      "LazyGit",
+      "LazyGitConfig",
+      "LazyGitCurrentFile",
+      "LazyGitFilter",
+      "LazyGitFilterCurrentFile",
     },
-  },
-  {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    build = ":Copilot auth",
-    event = "BufReadPost",
-    opts = {
-      suggestion = {
-        enabled = not vim.g.ai_cmp,
-        auto_trigger = true,
-        hide_during_completion = vim.g.ai_cmp,
-        keymap = {
-          accept = false, -- handled by nvim-cmp / blink.cmp
-          next = "<M-]>",
-          prev = "<M-[>",
-        },
-      },
-      panel = { enabled = false },
-      filetypes = {
-        markdown = true,
-        help = true,
-      },
+    -- optional for floating window border decoration
+    dependencies = {
+      "nvim-telescope/telescope.nvim",
+      "nvim-lua/plenary.nvim",
     },
+    config = function()
+      require("telescope").load_extension("lazygit")
+    end,
   },
 }
