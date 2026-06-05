@@ -1,7 +1,3 @@
-local dotnet_root = vim.fn.expand("~/.dotnet")
-vim.env.DOTNET_ROOT = dotnet_root
-vim.env.PATH = vim.env.PATH .. ":" .. dotnet_root .. ":" .. dotnet_root .. "/tools"
-
 return {
   -- 1. TEMA
   { "rebelot/kanagawa.nvim" },
@@ -32,47 +28,6 @@ return {
           color = { fg = "#512bd4" },
         })
       end
-    end,
-  },
-
-  -- 4. EASY-DOTNET (Corregido y verificado)
-  {
-    "GustavEikaas/easy-dotnet.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "mfussenegger/nvim-dap",
-      "nvim-telescope/telescope.nvim",
-    },
-    config = function()
-      local dotnet = require("easy-dotnet")
-
-      dotnet.setup({
-        terminal = function(path, action, args)
-          local command = string.format("dotnet %s %s %s", action, path, args or "")
-          vim.cmd("vsplit | term " .. command)
-        end,
-      })
-
-      -- MAPEOS SEGUROS (Evitan el error 'got nil')
-      -- Build
-      vim.keymap.set("n", "<leader>db", function()
-        dotnet.build()
-      end, { desc = "Build Project" })
-
-      -- Run
-      vim.keymap.set("n", "<leader>dr", function()
-        dotnet.run()
-      end, { desc = "Run Project" })
-
-      -- Test Runner (Corregido: cargando el módulo de UI)
-      vim.keymap.set("n", "<leader>dt", function()
-        local ok, runner = pcall(require, "easy-dotnet.test-runner")
-        if ok then
-          runner.refresh()
-        else
-          print("Test runner no disponible")
-        end
-      end, { desc = "Test Runner" })
     end,
   },
 

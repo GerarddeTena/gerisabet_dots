@@ -1,10 +1,20 @@
 layout {
-    tab name="nvim" focus=true {
-        pane
+    tab name="NVIM - Workspace" focus=true {
+        pane command="nvim" name="NVIM - Workspace" {
+            start_suspended false
+        }
     }
 
-    tab name="shell" {
-        pane
+    tab name="Open Code - Workspace" {
+        pane command="opencode" name="Open Code - Workspace" {
+            start_suspended false
+        }
+    }
+
+    tab name="Shell" {
+        pane command="fish" name="Shell" {
+          start_suspended false
+        }
     }
 
     default_tab_template {
@@ -16,7 +26,7 @@ layout {
 
               border_enabled  "false"
               border_char     "─"
-              border_format   "#[fg=#C0A36E]{char}"
+              border_format   "#[fg=#a56bae]{char}"
               border_position "top"
 
               hide_frame_for_single_pane "true"
@@ -25,7 +35,7 @@ layout {
               mode_tmux    "#[bg=#FFA066] "
 
               tab_normal   "#[fg=#54546D] {name} "
-              tab_active   "#[fg=#C34043,bold,italic] {name} "
+              tab_active   "#[fg=#7F40C3,bold,italic] {name} "
 
               command_git_branch_command     "git rev-parse --abbrev-ref HEAD"
               command_git_branch_format      "#[fg=#76946A] {stdout} "
